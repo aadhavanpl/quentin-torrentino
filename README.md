@@ -13,7 +13,9 @@
 tl;dr: parse -> connect -> download -> verify -> assemble
 
 ## `.torrent` file structure
-> Contains the torrent metadata and the information to connect to the trackers, encoded in Bencode
+> Contains the torrent metadata and the information to connect to the trackers, encoded in **Bencode**
+
+### Bencode format
 
 - Strings
   - \<string_len>:\<string>
@@ -31,6 +33,10 @@ tl;dr: parse -> connect -> download -> verify -> assemble
 The important contents of the `.torrent` file are the announce url (tracker), and a big binary blob which holds the SHA-1 hashes of all pieces. 
 
 This project uses a [pre-built parser](https://github.com/jackpal/bencode-go).
+
+## BitTorrent specification
+
+https://www.bittorrent.org/beps/bep_0003.html
 
 ## Inspiration
 [Jesse Li](https://blog.jse.li/)
