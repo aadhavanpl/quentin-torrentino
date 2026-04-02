@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/aadhavanpl/quentin-torrentino/torrentfile"
+	"github.com/aadhavanpl/quentin-torrentino/torrent"
 )
 
 func main() {
@@ -14,17 +14,27 @@ func main() {
 	torrentFilePath := os.Args[1]
 	outputPath := os.Args[2]
 
-	torrentFile, err := torrentfile.ParseTorrentFile(torrentFilePath)
+	torrentFile, err := torrent.ParseTorrentFile(torrentFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	trackerUrl, err := torrentFile.BuildTrackerUrl(torrentFile)
+	peerId, err := torrent.GeneratePeerId()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	peers, err := torrentFile.RequestPeers(trackerUrl)
+	trackerUrl, err := torrent.BuildTrackerUrl(torrentFile, peerId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	peers, err := torrent.RequestPeers(trackerUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = torrent.DownloadFile(torrentFile, peers, peerId, outputPath)
 	if err != nil {
 		log.Fatal(err)
 	}
