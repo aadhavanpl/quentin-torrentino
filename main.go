@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Torrent file path required!")
+	if len(os.Args) < 3 {
+		log.Fatal("Usage: quentin-torrentino <torrent-file> <output-path>")
 	}
 	torrentFilePath := os.Args[1]
 	outputPath := os.Args[2]

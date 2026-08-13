@@ -56,8 +56,12 @@ type BencodeTrackerResponse struct {
 }
 
 type Peer struct {
-    IP   net.IP // 4 butes
-    Port uint16 // 2 bytes - Big-endian
+	IP   net.IP // 4 butes
+	Port uint16 // 2 bytes - Big-endian
+}
+
+func (p Peer) String() string {
+	return net.JoinHostPort(p.IP.String(), strconv.Itoa(int(p.Port)))
 }
 
 const PORT = 6000
@@ -109,7 +113,7 @@ func ParseTorrentFile(torrentFilePath string) (TorrentFile, error) {
 
 func GeneratePeerId() ([20]byte, error) {
 	var peerId [20]byte
-	
+
 	_, err := rand.Read(peerId[:])
 	if err != nil {
 		return [20]byte{}, err
@@ -120,22 +124,22 @@ func GeneratePeerId() ([20]byte, error) {
 
 func BuildTrackerUrl(torrentFile TorrentFile, peerId [20]byte) (string, error) {
 	base, err := url.Parse(torrentFile.Announce)
-    if err != nil {
-        return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 
 	params := url.Values{
-        "info_hash":  []string{string(torrentFile.InfoHash[:])},
-        "peer_id":    []string{string(peerId[:])},
-        "port":       []string{strconv.Itoa(int(PORT))},
-        "uploaded":   []string{"0"},
-        "downloaded": []string{"0"},
-        "compact":    []string{"1"},
-        "left":       []string{strconv.Itoa(torrentFile.Length)},
-    }
+		"info_hash":  []string{string(torrentFile.InfoHash[:])},
+		"peer_id":    []string{string(peerId[:])},
+		"port":       []string{strconv.Itoa(int(PORT))},
+		"uploaded":   []string{"0"},
+		"downloaded": []string{"0"},
+		"compact":    []string{"1"},
+		"left":       []string{strconv.Itoa(torrentFile.Length)},
+	}
 
 	base.RawQuery = params.Encode()
-    return base.String(), nil
+	return base.String(), nil
 }
 
 func RequestPeers(trackerUrl string) ([]Peer, error) {
@@ -159,29 +163,29 @@ func ParseTrackerResponse(peersData []byte) ([]Peer, error) {
 	const peerSize = 6
 
 	if len(peersData)%peerSize != 0 {
-        return nil, fmt.Errorf("Received malformed peers")
-    }
+		return nil, fmt.Errorf("Received malformed peers")
+	}
 
 	numPeers := len(peersData) / peerSize
 	peers := make([]Peer, numPeers)
 	for i := range numPeers {
-        offset := i * peerSize
-        peers[i].IP = net.IP(peersData[offset : offset+4])
-        peers[i].Port = binary.BigEndian.Uint16(peersData[offset+4 : offset+6])
-    }
-    return peers, nil
+		offset := i * peerSize
+		peers[i].IP = net.IP(peersData[offset : offset+4])
+		peers[i].Port = binary.BigEndian.Uint16(peersData[offset+4 : offset+6])
+	}
+	return peers, nil
 }
 
 func DownloadFile(torrentFile TorrentFile, peers []Peer, peerId [20]byte, outputPath string) error {
-	torrent := Torrent {
-		Peers: 		 peers,
-		PeerID: 	 peerId,
+	torrent := Torrent{
+		Peers:       peers,
+		PeerID:      peerId,
 		InfoHash:    torrentFile.InfoHash,
 		PieceHashes: torrentFile.PieceHashes,
 		PieceLength: torrentFile.PieceLength,
 		Length:      torrentFile.Length,
 		Name:        torrentFile.Name,
 	}
-	
 
+	return torrent.DownloadToFile(outputPath)
 }
